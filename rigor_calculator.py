@@ -1,4 +1,4 @@
-import math
+import string
 
 def calculate_rigor(wordlist):
     rootState = {
@@ -186,4 +186,6 @@ def calculate_rigor(wordlist):
 
     return score
 
-print(calculate_rigor('therefore without loss of generality'.split(' ')))
+print(calculate_rigor('therefore without? loss of generality'.translate(
+    str.maketrans(string.punctuation, len(string.punctuation) * ' ')
+).split()))
