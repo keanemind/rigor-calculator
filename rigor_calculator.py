@@ -1,7 +1,38 @@
-import string
+import string, os, subprocess
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 
-def calculate_rigor(wordlist):
-    rootState = {
+app = Flask(__name__)
+
+@app.route('/text', methods=('POST'))
+def text_rigor():
+    return jsonify({'result': str_rigor(request.form['text'])})
+
+@app.route('/pdf', methods=('POST'))
+def pdf_rigor():
+    """Return the rigor of a PDF."""
+    file = request.files.get('file')
+    if file and file.filename and file.filename.endswith('.pdf'):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join('/pdfs', filename)
+        file.save(filepath)
+        subprocess.call(['gs', '-sDEVICE=txtwrite', '-o', 'output.txt', filepath])
+
+        with file.open('output.txt') as f:
+            text = f.read()
+
+        return jsonify({'result': str_rigor(text)})
+
+@app.route('/image', methods=('POST'))
+def image_rigor():
+    """Return the rigor of an image."""
+
+def generate_rigor_tree(rules: dict):
+    """Generate a state tree from rigor rules"""
+
+def calculate_rigor(wordlist: list):
+    """Calculate the rigor of a list of words."""
+    root_state = {
         'oper': lambda cur: cur,
         'next': {
             'assume': {
@@ -170,22 +201,24 @@ def calculate_rigor(wordlist):
             }
         }
     }
-    state = rootState
+    state = root_state
     score = 100
     for word in wordlist:
         word = word.lower()
         state = state['next'].get(word)
 
         if not state:
-            state = rootState['next'].get(word)
+            state = root_state['next'].get(word)
         
         if not state:
-            state = rootState
+            state = root_state
 
         score = state['oper'](score)
 
     return score
 
-print(calculate_rigor('therefore without? loss of generality'.translate(
-    str.maketrans(string.punctuation, len(string.punctuation) * ' ')
-).split()))
+def str_rigor(text: str):
+    """Get the rigor of a string."""
+    return calculate_rigor(text.translate(
+        str.maketrans(string.punctuation, len(string.punctuation) * ' ')
+    ).split())
