@@ -9,11 +9,18 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js?x$/,
+        test: /\.jsx?$/,
         loader: 'babel-loader',
         options: {
           presets: ['@babel/preset-react'],
         },
+      },
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader',
+        ],
       },
       {
         test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|eot|woff|woff2)$/,
@@ -22,5 +29,8 @@ module.exports = {
         ],
       },
     ],
+  },
+  resolve: {
+    extensions: ['.wasm', '.mjs', '.js', '.json', '.jsx'],
   },
 };
