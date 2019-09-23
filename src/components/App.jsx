@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
-import {Typography, Radio, Upload, Icon, Input, Col, Row, Button} from 'antd';
+import {
+  Typography, Radio, Upload, Icon, Input, Col, Row, Button, Card,
+} from 'antd';
 
 /**
  * Main page.
@@ -40,11 +42,16 @@ function App() {
     );
   } else if (inputType === 'url') {
     input = (
-      <Input.Search
-        size='large'
-        placeholder='https://www.example.com/proof.pdf'
-        enterButton='Submit'
-      />
+      <>
+        <Input.Search
+          size='large'
+          placeholder='https://www.example.com/proof.pdf'
+          enterButton='Submit'
+        />
+        <Typography.Text type='secondary'>
+          Note: the linked file must be a PDF or image.
+        </Typography.Text>
+      </>
     );
   } else if (inputType === 'text') {
     input = (
@@ -61,39 +68,46 @@ function App() {
   return (
     <>
         <div style={{textAlign: 'center', paddingTop: '75px'}}>
-          <Typography.Title>Rigor Calculator</Typography.Title>
-          <p>
-            Upload a picture / PDF, provide a URL, or type out the proof
-            (LaTeX accepted).
-          </p>
-          <Radio.Group
-            onChange={handleInputTypeChange}
-            defaultValue='image'
-            size='large'
-          >
-            <Radio.Button value='image'>
-              <Icon type='picture' />
-              <span style={{marginLeft: '8px'}}>Image</span>
-            </Radio.Button>
-            <Radio.Button size='large' value='pdf'>
-              <Icon type='file-text' />
-              <span style={{marginLeft: '8px'}}>PDF</span>
-            </Radio.Button>
-            <Radio.Button size='large' value='url'>
-              <Icon type='link' />
-              <span style={{marginLeft: '8px'}}>URL</span>
-            </Radio.Button>
-            <Radio.Button size='large' value='text'>
-              <Icon type='form' />
-              <span style={{marginLeft: '8px'}}>Text</span>
-            </Radio.Button>
-          </Radio.Group>
-          <Row type='flex' justify='center' style={{marginTop: '25px'}}>
-            <Col xs={20} sm={20} md={12} lg={8} xl={8} xxl={8}>
-              {input}
+          <Typography.Title>Rigor Checker 🧐</Typography.Title>
+          <Typography.Title level={4}>
+            Determine objectively how rigorous a mathematical proof is!
+          </Typography.Title>
+          <br />
+          <Row type='flex' justify='center'>
+            <Col xs={22} sm={22} md={14} lg={14} xl={10} xxl={10}>
+              <Card>
+                <p>
+                  Upload a picture / PDF, provide a URL, or type out the proof
+                  (LaTeX accepted).
+                </p>
+                <Radio.Group
+                  onChange={handleInputTypeChange}
+                  defaultValue='image'
+                  size='large'
+                >
+                  <Radio.Button value='image'>
+                    <Icon type='picture' />
+                    <span style={{marginLeft: '8px'}}>Image</span>
+                  </Radio.Button>
+                  <Radio.Button size='large' value='pdf'>
+                    <Icon type='file-text' />
+                    <span style={{marginLeft: '8px'}}>PDF</span>
+                  </Radio.Button>
+                  <Radio.Button size='large' value='url'>
+                    <Icon type='link' />
+                    <span style={{marginLeft: '8px'}}>URL</span>
+                  </Radio.Button>
+                  <Radio.Button size='large' value='text'>
+                    <Icon type='form' />
+                    <span style={{marginLeft: '8px'}}>Text</span>
+                  </Radio.Button>
+                </Radio.Group>
+                <div style={{marginTop: '1.4em'}}>
+                  {input}
+                </div>
+              </Card>
             </Col>
           </Row>
-
         </div>
     </>
   );
