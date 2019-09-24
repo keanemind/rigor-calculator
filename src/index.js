@@ -1,5 +1,6 @@
 import 'file-loader?name=index.html!./index.html';
 import 'antd/dist/antd.css';
+import './style.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App';

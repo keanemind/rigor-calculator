@@ -1,0 +1,31 @@
+@media (max-width: 576px) {
+    .mobile-hide {
+        display: none;
+    }
+}
+
+.fadeInUp {
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: fadeInUp;
+}
+
+.fadeInUpDelay {
+    animation-delay: 0.05s;
+}
+
+.fadeInUpDelay2 {
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translate(0, 40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+}
