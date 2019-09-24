@@ -173,6 +173,10 @@ def calculate_rigor(wordlist: list):
                 'oper': lambda cur: cur - 22,
                 'next': {}
             },
+            'trivial': {
+                'oper': lambda cur: cur - 33,
+                'next': {}
+            },
             'of': {
                 'oper': lambda cur: cur,
                 'next': {
@@ -209,7 +213,7 @@ def calculate_rigor(wordlist: list):
 
         if not state:
             state = root_state['next'].get(word)
-        
+
         if not state:
             state = root_state
 
