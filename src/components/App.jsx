@@ -184,7 +184,57 @@ function App() {
           value={textProof}
         />
         <Button type='primary' onClick={handleTextSubmit} block>Submit</Button>
+        {alertDisplay}
       </>
+    );
+  }
+
+  let cardContent;
+  if (!result) {
+    cardContent = (
+      <>
+        <p>
+          Upload a picture / PDF, provide a URL, or type out the proof
+          (LaTeX accepted).
+        </p>
+        <Radio.Group
+          onChange={handleInputTypeChange}
+          defaultValue='image'
+          size='large'
+        >
+          <Radio.Button value='image'>
+            <Icon type='picture' />
+            <span style={{marginLeft: '8px'}} className='mobile-hide'>
+              Image
+            </span>
+          </Radio.Button>
+          <Radio.Button size='large' value='pdf'>
+            <Icon type='file-text' />
+            <span style={{marginLeft: '8px'}} className='mobile-hide'>
+              PDF
+            </span>
+          </Radio.Button>
+          <Radio.Button size='large' value='url'>
+            <Icon type='link' />
+            <span style={{marginLeft: '8px'}} className='mobile-hide'>
+              URL
+            </span>
+          </Radio.Button>
+          <Radio.Button size='large' value='text'>
+            <Icon type='form' />
+            <span style={{marginLeft: '8px'}} className='mobile-hide'>
+              Text
+            </span>
+          </Radio.Button>
+        </Radio.Group>
+        <div style={{marginTop: '1.4em'}}>
+          {input}
+        </div>
+      </>
+    );
+  } else {
+    cardContent = (
+      <Typography.Text>Your proof is {result}% rigorous.</Typography.Text>
     );
   }
 
@@ -203,45 +253,7 @@ function App() {
               xs={22} sm={22} md={14} lg={14} xl={10} xxl={10}
               className='fadeInUp fadeInUpDelay2'
             >
-              <Card>
-                <p>
-                  Upload a picture / PDF, provide a URL, or type out the proof
-                  (LaTeX accepted).
-                </p>
-                <Radio.Group
-                  onChange={handleInputTypeChange}
-                  defaultValue='image'
-                  size='large'
-                >
-                  <Radio.Button value='image'>
-                    <Icon type='picture' />
-                    <span style={{marginLeft: '8px'}} className='mobile-hide'>
-                      Image
-                    </span>
-                  </Radio.Button>
-                  <Radio.Button size='large' value='pdf'>
-                    <Icon type='file-text' />
-                    <span style={{marginLeft: '8px'}} className='mobile-hide'>
-                      PDF
-                    </span>
-                  </Radio.Button>
-                  <Radio.Button size='large' value='url'>
-                    <Icon type='link' />
-                    <span style={{marginLeft: '8px'}} className='mobile-hide'>
-                      URL
-                    </span>
-                  </Radio.Button>
-                  <Radio.Button size='large' value='text'>
-                    <Icon type='form' />
-                    <span style={{marginLeft: '8px'}} className='mobile-hide'>
-                      Text
-                    </span>
-                  </Radio.Button>
-                </Radio.Group>
-                <div style={{marginTop: '1.4em'}}>
-                  {input}
-                </div>
-              </Card>
+              <Card>{cardContent}</Card>
             </Col>
           </Row>
         </div>
