@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {
-  Typography, Radio, Upload, Icon, Input, Col, Row, Button, Card,
+  Typography, Radio, Upload, Icon, Input, Col, Row, Button, Card, Alert, Spin,
 } from 'antd';
 
 /**
@@ -9,6 +9,10 @@ import {
  */
 function App() {
   const [inputType, setInputType] = useState('image');
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(undefined);
+  const [result, setResult] = useState(undefined);
+  const [textProof, setTextProof] = useState('');
 
   /**
    * @param {Event} e
@@ -17,8 +21,85 @@ function App() {
     setInputType(e.target.value);
   }
 
+  /**
+   * @param {Event} e
+   */
+  function handleTextProofChange(e) {
+    setTextProof(e.target.value);
+  }
+
+  /**
+   * Make a request to the API.
+   * @param {String} value text in the textbox
+   */
+  function handleURLSubmit(value) {
+    if (!validURL(value)) {
+      setAlert({type: 'error', text: 'Not a valid URL.'});
+      return;
+    }
+
+    if (
+      !value.endsWith('.jpeg') &&
+      !value.endsWith('.jpg') &&
+      !value.endsWith('.png') &&
+      !value.endsWith('.gif') &&
+      !value.endsWith('.bmp') &&
+      !value.endsWith('.tiff') &&
+      !value.endsWith('.pdf')
+    ) {
+      setAlert({type: 'error', text: 'Not a supported format.'});
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      const resp = JSON.parse(xhr.responseText);
+      console.log(resp['result']);
+      setResult(resp['result']);
+      setLoading(false);
+    };
+    xhr.open('POST', 'http://localhost:5000/url');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({url: value}));
+    setLoading(true);
+  }
+
+  /**
+   * Make a request to the API.
+   */
+  function handleTextSubmit() {
+    if (!textProof) {
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => {
+      const resp = JSON.parse(xhr.responseText);
+      console.log(resp['result']);
+      setResult(resp['result']);
+      setLoading(false);
+    };
+    xhr.open('POST', 'http://localhost:5000/text');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({text: textProof}));
+    setLoading(true);
+  }
+
+  let alertDisplay;
+  if (alert) {
+    alertDisplay = (
+      <>
+        <br />
+        <br />
+        <Alert type={alert.type} message={alert.text} showIcon />
+      </>
+    );
+  }
+
   let input;
-  if (inputType === 'image') {
+  if (loading) {
+    input = <Spin />;
+  } else if (inputType === 'image') {
     input = (
       <Upload.Dragger accept='image/*'>
         <p className="ant-upload-drag-icon">
@@ -36,7 +117,8 @@ function App() {
           <Icon type='upload' />
         </p>
         <Typography.Text>
-          Drag a PDF to this area, or click to browse for a PDF.
+          Drag a PDF to this area, or click to browse for a PDF.<br />
+          Note: the PDF must be a text PDF. It cannot consist only of images.
         </Typography.Text>
       </Upload.Dragger>
     );
@@ -47,10 +129,12 @@ function App() {
           size='large'
           placeholder='https://www.example.com/proof.pdf'
           enterButton='Submit'
+          onSearch={handleURLSubmit}
         />
         <Typography.Text type='secondary'>
           Note: the linked file must be a PDF or image.
         </Typography.Text>
+        {alertDisplay}
       </>
     );
   } else if (inputType === 'text') {
@@ -59,8 +143,10 @@ function App() {
         <Input.TextArea
           placeholder='Assume that √2 is rational...'
           autosize={{minRows: 3}}
+          onChange={handleTextProofChange}
+          value={textProof}
         />
-        <Button type='primary' block>Submit</Button>
+        <Button type='primary' onClick={handleTextSubmit} block>Submit</Button>
       </>
     );
   }
@@ -124,6 +210,21 @@ function App() {
         </div>
     </>
   );
+}
+
+/**
+ * Returns whether a string is a valid URL.
+ * @param {String} str string to test
+ * @return {Boolean}
+ */
+function validURL(str) {
+  const pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+  return !!pattern.test(str);
 }
 
 export default App;

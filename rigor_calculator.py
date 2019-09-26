@@ -16,6 +16,25 @@ if not os.path.isdir('./submissions'):
 app = Flask(__name__) # pylint: disable=invalid-name
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 
+@app.after_request
+def apply_headers(response):
+    """Add headers to every response."""
+    origin = request.environ.get('HTTP_ORIGIN', '')
+    host = urllib.parse.urlparse(origin).hostname
+    if host in ('localhost', '127.0.0.1'):
+        response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS, PUT'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Vary'] = 'Origin'
+    return response
+
+@app.errorhandler(werkzeug.exceptions.RequestEntityTooLarge)
+def handle_too_large(error):
+    """Handle error when request is too large."""
+    response = jsonify({'error': 'Upload too large.'})
+    response.status_code = error.status_code
+    return response
+
 @app.route('/text', methods=('POST',))
 def text_rigor():
     """Return the rigor of text."""
@@ -77,8 +96,10 @@ def url_rigor():
     ):
         return jsonify({'error': 'Not an accepted file format.'})
 
-    # Check file size
-    resp = urllib.request.urlopen(url)
+    try:
+        resp = urllib.request.urlopen(url)
+    except urllib.error.URLError:
+        return jsonify({'error': 'Invalid URL.'})
 
     # Download file
     parsed_url = urllib.parse.urlparse(url)
@@ -341,10 +362,3 @@ def img_to_text(path: str):
                     for symbol in word.symbols:
                         print('\tSymbol: {} (confidence: {})'.format(
                             symbol.text, symbol.confidence))
-
-@app.errorhandler(werkzeug.exceptions.RequestEntityTooLarge)
-def handle_too_large(error):
-    """Handle error when request is too large."""
-    response = jsonify({'error': 'Upload too large.'})
-    response.status_code = error.status_code
-    return response
