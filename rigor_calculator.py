@@ -85,7 +85,7 @@ def url_rigor():
     filename = os.path.basename(parsed_url.path)
     filepath = os.path.join('./submissions', filename)
     with open(filepath, 'wb') as out_file:
-        shutil.copyfileobj(resp, out_file)
+        shutil.copyfileobj(resp, out_file) # TODO: limit file size
 
     if filename.endswith('.pdf'):
         # Determine if PDF is text or image
