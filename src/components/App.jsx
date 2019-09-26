@@ -30,6 +30,18 @@ function App() {
   }
 
   /**
+   * @param {*} info
+   */
+  function handleFileChange(info) {
+    if (info.file.status === 'done') {
+      setResult(info.file.response['result']);
+    } else if (info.file.status === 'error') {
+      console.log(info);
+      setAlert({type: 'error', text: info.file.error.message});
+    }
+  }
+
+  /**
    * Make a request to the API.
    * @param {String} value text in the textbox
    */
@@ -112,26 +124,40 @@ function App() {
     input = <Spin />;
   } else if (inputType === 'image') {
     input = (
-      <Upload.Dragger accept='image/*'>
-        <p className="ant-upload-drag-icon">
-          <Icon type='camera' />
-        </p>
-        <Typography.Text>
-          Drag a photo to this area, or click to capture / browse for a photo.
-        </Typography.Text>
-      </Upload.Dragger>
+      <>
+        <Upload.Dragger
+          accept='image/*'
+          action='http://localhost:5000/image'
+          onChange={handleFileChange}
+        >
+          <p className="ant-upload-drag-icon">
+            <Icon type='camera' />
+          </p>
+          <Typography.Text>
+            Drag a photo to this area, or click to capture / browse for a photo.
+          </Typography.Text>
+        </Upload.Dragger>
+        {alertDisplay}
+      </>
     );
   } else if (inputType === 'pdf') {
     input = (
-      <Upload.Dragger accept='.pdf'>
-        <p className="ant-upload-drag-icon">
-          <Icon type='upload' />
-        </p>
-        <Typography.Text>
-          Drag a PDF to this area, or click to browse for a PDF.<br />
-          Note: the PDF must be a text PDF. It cannot consist only of images.
-        </Typography.Text>
-      </Upload.Dragger>
+      <>
+        <Upload.Dragger
+          accept='.pdf'
+          action='http://localhost:5000/pdf'
+          onChange={handleFileChange}
+        >
+          <p className="ant-upload-drag-icon">
+            <Icon type='upload' />
+          </p>
+          <Typography.Text>
+            Drag a PDF to this area, or click to browse for a PDF.<br />
+            Note: the PDF must be a text PDF. It cannot consist only of images.
+          </Typography.Text>
+        </Upload.Dragger>
+        {alertDisplay}
+      </>
     );
   } else if (inputType === 'url') {
     input = (
