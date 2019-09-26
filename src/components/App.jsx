@@ -53,6 +53,11 @@ function App() {
 
     const xhr = new XMLHttpRequest();
     xhr.onload = () => {
+      if (Math.floor(xhr.status / 100) === 5) {
+        setAlert({type: 'error', text: 'Internal server error.'});
+        setLoading(false);
+        return;
+      }
       const resp = JSON.parse(xhr.responseText);
       console.log(resp['result']);
       setResult(resp['result']);
@@ -74,6 +79,11 @@ function App() {
 
     const xhr = new XMLHttpRequest();
     xhr.onload = () => {
+      if (Math.floor(xhr.status / 100) === 5) {
+        setAlert({type: 'error', text: 'Internal server error.'});
+        setLoading(false);
+        return;
+      }
       const resp = JSON.parse(xhr.responseText);
       console.log(resp['result']);
       setResult(resp['result']);
