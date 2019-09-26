@@ -19,6 +19,7 @@ function App() {
    */
   function handleInputTypeChange(e) {
     setInputType(e.target.value);
+    setAlert(undefined);
   }
 
   /**
