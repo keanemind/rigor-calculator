@@ -51,7 +51,7 @@ def pdf_rigor():
     filepath = os.path.join('./submissions', filename)
     file.save(filepath)
     subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-    # os.remove(filepath)
+    os.remove(filepath)
 
     pdf = PyPDF2.PdfFileReader(filepath)
     num_pages = pdf.getNumPages()
@@ -82,7 +82,7 @@ def image_rigor():
     file.save(filepath)
 
     text = img_to_text(filepath)
-    # os.remove(filepath)
+    os.remove(filepath)
     return jsonify({'result': str_rigor(text)})
 
 @app.route('/url', methods=('POST',))
@@ -111,7 +111,7 @@ def url_rigor():
     if filename.endswith('.pdf'):
         # Determine if PDF is text or image
         subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-        # os.remove(filepath)
+        os.remove(filepath)
 
         pdf = PyPDF2.PdfFileReader(filepath)
         num_pages = pdf.getNumPages()
@@ -128,7 +128,7 @@ def url_rigor():
         )
 
     text = img_to_text(filepath)
-    # os.remove(filepath)
+    os.remove(filepath)
     return jsonify({'result': str_rigor(text)})
 
 def generate_rigor_tree(rules: dict):
