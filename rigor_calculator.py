@@ -1,31 +1,114 @@
-import string, os, subprocess
+"""REST API for calculating rigor."""
+import string
+import os
+import subprocess
+import urllib
+import shutil
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
+import werkzeug.exceptions
+from google.cloud import vision
+import PyPDF2
 
-app = Flask(__name__)
+if not os.path.isdir('./submissions'):
+    os.mkdir('./submissions')
 
-@app.route('/text', methods=('POST'))
+app = Flask(__name__) # pylint: disable=invalid-name
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+
+@app.route('/text', methods=('POST',))
 def text_rigor():
-    return jsonify({'result': str_rigor(request.form['text'])})
+    """Return the rigor of text."""
+    return jsonify({'result': str_rigor(request.json['text'])})
 
-@app.route('/pdf', methods=('POST'))
+@app.route('/pdf', methods=('POST',))
 def pdf_rigor():
     """Return the rigor of a PDF."""
     file = request.files.get('file')
-    if file and file.filename and file.filename.endswith('.pdf'):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join('/pdfs', filename)
-        file.save(filepath)
-        subprocess.call(['gs', '-sDEVICE=txtwrite', '-o', 'output.txt', filepath])
+    if not file or not file.filename or not file.filename.endswith('.pdf'):
+        return jsonify({'error': 'Invalid file.'})
 
-        with file.open('output.txt') as f:
-            text = f.read()
+    filename = secure_filename(file.filename)
+    filepath = os.path.join('./submissions', filename)
+    file.save(filepath)
+    subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
+    os.remove(filepath)
 
+    pdf = PyPDF2.PdfFileReader(filepath)
+    num_pages = pdf.getNumPages()
+
+    with open('output.txt', 'r') as text_file:
+        text = text_file.read()
+        is_probably_scanned = len(text.split()) / num_pages < 20
+
+    if not is_probably_scanned:
         return jsonify({'result': str_rigor(text)})
 
-@app.route('/image', methods=('POST'))
+    return jsonify(
+        {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
+    )
+
+
+@app.route('/image', methods=('POST',))
 def image_rigor():
     """Return the rigor of an image."""
+    file = request.files.get('file')
+    if not file or not file.filename or not file.filename.endswith(
+            ('.jpeg', '.jpg', '.png', '.gif', '.bmp', '.tiff')
+    ):
+        return jsonify({'error': 'Not an accepted file format.'})
+
+    filename = secure_filename(file.filename)
+    filepath = os.path.join('./submissions', filename)
+    file.save(filepath)
+
+    text = img_to_text(filepath)
+    os.remove(filepath)
+    return jsonify({'result': str_rigor(text)})
+
+@app.route('/url', methods=('POST',))
+def url_rigor():
+    """Return the rigor of a PDF or image URL."""
+    url = request.json['url']
+
+    # Check that URL is pdf or image
+    if not url.endswith(
+            ('.jpeg', '.jpg', '.png', '.gif', '.bmp', '.tiff', '.pdf')
+    ):
+        return jsonify({'error': 'Not an accepted file format.'})
+
+    # Check file size
+    resp = urllib.request.urlopen(url)
+
+    # Download file
+    parsed_url = urllib.parse.urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    filepath = os.path.join('./submissions', filename)
+    with open(filepath, 'wb') as out_file:
+        shutil.copyfileobj(resp, out_file)
+
+    if filename.endswith('.pdf'):
+        # Determine if PDF is text or image
+        subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
+        os.remove(filepath)
+
+        pdf = PyPDF2.PdfFileReader(filepath)
+        num_pages = pdf.getNumPages()
+
+        with open('output.txt', 'r') as text_file:
+            text = text_file.read()
+            is_probably_scanned = len(text.split()) / num_pages < 20
+
+        if not is_probably_scanned:
+            return jsonify({'result': str_rigor(text)})
+
+        return jsonify(
+            {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
+        )
+
+    text = img_to_text(filepath)
+    os.remove(filepath)
+    return jsonify({'result': str_rigor(text)})
 
 def generate_rigor_tree(rules: dict):
     """Generate a state tree from rigor rules"""
@@ -226,3 +309,42 @@ def str_rigor(text: str):
     return calculate_rigor(text.translate(
         str.maketrans(string.punctuation, len(string.punctuation) * ' ')
     ).split())
+
+def img_to_text(path: str):
+    """Convert an image to text."""
+    client = vision.ImageAnnotatorClient()
+    filename = os.path.abspath(path)
+
+    with open(filename, 'rb') as image_file:
+        content = image_file.read()
+
+    image = vision.types.Image(content=content) # pylint: disable=no-member
+    response = client.document_text_detection(image) # pylint: disable=no-member
+
+    return response.full_text_annotation.text
+
+    for page in response.full_text_annotation.pages:
+        for block in page.blocks:
+            print('\nBlock confidence: {}\n'.format(block.confidence))
+
+            for paragraph in block.paragraphs:
+                print('Paragraph confidence: {}'.format(
+                    paragraph.confidence))
+
+                for word in paragraph.words:
+                    word_text = ''.join([
+                        symbol.text for symbol in word.symbols
+                    ])
+                    print('Word text: {} (confidence: {})'.format(
+                        word_text, word.confidence))
+
+                    for symbol in word.symbols:
+                        print('\tSymbol: {} (confidence: {})'.format(
+                            symbol.text, symbol.confidence))
+
+@app.errorhandler(werkzeug.exceptions.RequestEntityTooLarge)
+def handle_too_large(error):
+    """Handle error when request is too large."""
+    response = jsonify({'error': 'Upload too large.'})
+    response.status_code = error.status_code
+    return response
