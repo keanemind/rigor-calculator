@@ -19,4 +19,7 @@ module.exports = {
   'parserOptions': {
     'sourceType': 'module',
   },
+  'globals': {
+    '__APIURL__': true,
+  },
 };

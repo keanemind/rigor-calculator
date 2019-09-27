@@ -1,3 +1,5 @@
+const webpack = require('webpack');
+
 module.exports = {
   mode: 'development',
   entry: {
@@ -33,4 +35,9 @@ module.exports = {
   resolve: {
     extensions: ['.wasm', '.mjs', '.js', '.json', '.jsx'],
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      '__APIURL__': process.env.BACKEND_URL ? JSON.stringify(process.env.BACKEND_URL) : JSON.stringify('http://localhost:5000'),
+    }),
+  ],
 };

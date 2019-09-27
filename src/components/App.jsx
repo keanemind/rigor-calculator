@@ -84,7 +84,7 @@ function App() {
       setResult(resp['result']);
       setLoading(false);
     };
-    xhr.open('POST', 'http://localhost:5000/url');
+    xhr.open('POST', __APIURL__ + '/url');
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({url: value}));
     setLoading(true);
@@ -109,7 +109,7 @@ function App() {
       setResult(resp['result']);
       setLoading(false);
     };
-    xhr.open('POST', 'http://localhost:5000/text');
+    xhr.open('POST', __APIURL__ + '/text');
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({text: textProof}));
     setLoading(true);
@@ -134,7 +134,7 @@ function App() {
       <>
         <Upload.Dragger
           accept='image/*'
-          action='http://localhost:5000/image'
+          action={__APIURL__ + '/image'}
           onChange={handleFileChange}
         >
           <p className="ant-upload-drag-icon">
@@ -152,7 +152,7 @@ function App() {
       <>
         <Upload.Dragger
           accept='.pdf'
-          action='http://localhost:5000/pdf'
+          action={__APIURL__ + '/pdf'}
           onChange={handleFileChange}
         >
           <p className="ant-upload-drag-icon">
