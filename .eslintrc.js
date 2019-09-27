@@ -22,4 +22,7 @@ module.exports = {
   'globals': {
     '__APIURL__': true,
   },
+  'rules': {
+    'react/no-unescaped-entities': 'off',
+  },
 };

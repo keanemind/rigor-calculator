@@ -3,6 +3,7 @@ import {
   Typography, Radio, Upload, Icon, Input, Col, Row, Button, Card, Alert, Spin,
 } from 'antd';
 import Gauge from 'react-gaugejs';
+import LaaLaa from '../laa_laa.jpeg';
 
 /**
  * Main page.
@@ -201,8 +202,8 @@ function App() {
     cardContent = (
       <>
         <p>
-          Upload a picture / PDF, provide a URL, or type out the proof
-          (LaTeX accepted).
+          Provide a picture, PDF, URL, or a typed out proof (LaTeX accepted).
+          Images can be of handwritten proofs.
         </p>
         <Radio.Group
           onChange={handleInputTypeChange}
@@ -291,7 +292,7 @@ function App() {
 
   return (
     <>
-        <div style={{textAlign: 'center', paddingTop: '75px'}}>
+        <div style={{textAlign: 'center', padding: '75px 0px'}}>
           <Typography.Title className='fadeInUp'>
             Rigor Checker 🧐
           </Typography.Title>
@@ -307,6 +308,48 @@ function App() {
               <Card>{cardContent}</Card>
             </Col>
           </Row>
+          <br />
+          <br />
+          <div className='fadeInUp fadeInUpDelay2' style={{padding: '0px 4vw'}}>
+            <Typography.Title>
+              How It Works
+            </Typography.Title>
+            <img src={LaaLaa}
+              style={{display: 'block', margin: 'auto', maxWidth: '100%'}}
+            />
+            <br />
+            <Typography.Paragraph
+              style={{
+                maxWidth: '615px',
+                margin: 'auto',
+                textAlign: 'left',
+              }}
+            >
+              Meet Laa Laa. She is a teletubby and logician. She loves riding
+              her scooter and reading proofs. If she is not busy riding her
+              scooter, she will analyze your proof's rigor.
+            </Typography.Paragraph>
+            <br />
+            <br />
+            <Typography.Title>
+              But Seriously
+            </Typography.Title>
+            <Typography.Paragraph
+              style={{
+                maxWidth: '615px',
+                margin: 'auto',
+                textAlign: 'left',
+              }}
+            >
+              The files you submit are never stored for longer than needed to
+              calculate a score. Made with the Google Cloud Vision API,
+              Ghostscript, React, and Flask. Check out the&nbsp;
+              <a href='https://github.com/keanemind/rigor-checker'>
+                GitHub repository
+              </a>.
+              Thanks for stopping by. —Keane
+            </Typography.Paragraph>
+          </div>
         </div>
     </>
   );
