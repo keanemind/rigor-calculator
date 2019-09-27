@@ -280,6 +280,7 @@ function App() {
           value={result}
           animationSpeed={20}
           textChangeHandler={handleResultTextChange}
+          style={{width: '100%', height: 'auto', maxWidth: '500px'}}
         />
         <Typography.Paragraph className='fadeIn fadeInDelay'>
           {message}
