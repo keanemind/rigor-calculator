@@ -4,6 +4,7 @@ import os
 import subprocess
 import urllib
 import shutil
+import random
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import werkzeug.exceptions
@@ -20,10 +21,7 @@ app.config['GHOSTSCRIPT_PATH'] = os.environ['GHOSTSCRIPT_PATH']
 @app.after_request
 def apply_headers(response):
     """Add headers to every response."""
-    origin = request.environ.get('HTTP_ORIGIN', '')
-    host = urllib.parse.urlparse(origin).hostname
-    if host in ('localhost', '127.0.0.1', 'keanemind.github.io'):
-        response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Origin'] = 'https://keanemind.github.io'
     response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS, PUT'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Requested-With'
     response.headers['Vary'] = 'Origin'
@@ -51,23 +49,7 @@ def pdf_rigor():
     filename = secure_filename(file.filename)
     filepath = os.path.join('./submissions', filename)
     file.save(filepath)
-    subprocess.call([app.config['GHOSTSCRIPT_PATH'], '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-
-    pdf = PyPDF2.PdfFileReader(filepath)
-    num_pages = pdf.getNumPages()
-
-    with open('output.txt', 'r') as text_file:
-        text = text_file.read()
-        is_probably_scanned = len(text.split()) / num_pages < 20
-
-    os.remove(filepath)
-
-    if not is_probably_scanned:
-        return jsonify({'result': str_rigor(text)})
-
-    return jsonify(
-        {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
-    )
+    return pdf_response(filepath)
 
 
 @app.route('/image', methods=('POST',))
@@ -111,24 +93,7 @@ def url_rigor():
         shutil.copyfileobj(resp, out_file) # TODO: limit file size
 
     if filename.endswith('.pdf'):
-        # Determine if PDF is text or image
-        subprocess.call([app.config['GHOSTSCRIPT_PATH'], '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-
-        pdf = PyPDF2.PdfFileReader(filepath)
-        num_pages = pdf.getNumPages()
-
-        with open('output.txt', 'r') as text_file:
-            text = text_file.read()
-            is_probably_scanned = len(text.split()) / num_pages < 20
-
-        os.remove(filepath)
-
-        if not is_probably_scanned:
-            return jsonify({'result': str_rigor(text)})
-
-        return jsonify(
-            {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
-        )
+        return pdf_response(filepath)
 
     text = img_to_text(filepath)
     os.remove(filepath)
@@ -365,3 +330,27 @@ def img_to_text(path: str):
                     for symbol in word.symbols:
                         print('\tSymbol: {} (confidence: {})'.format(
                             symbol.text, symbol.confidence))
+
+def pdf_response(filepath):
+    """Generate a response from a PDF."""
+    # Determine if PDF is text or image
+    rnd_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    txt_filename = 'output{}.txt'.format(rnd_str)
+    subprocess.call([app.config['GHOSTSCRIPT_PATH'], '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', txt_filename, filepath]) # pylint: disable=line-too-long
+
+    pdf = PyPDF2.PdfFileReader(filepath)
+    num_pages = pdf.getNumPages()
+
+    with open('output.txt', 'r') as text_file:
+        text = text_file.read()
+        is_probably_scanned = len(text.split()) / num_pages < 20
+
+    os.remove(filepath)
+    os.remove('./' + txt_filename)
+
+    if not is_probably_scanned:
+        return jsonify({'result': str_rigor(text)})
+
+    return jsonify(
+        {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
+    )
