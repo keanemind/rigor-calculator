@@ -15,7 +15,7 @@ if not os.path.isdir('./submissions'):
     os.mkdir('./submissions')
 
 app = Flask(__name__) # pylint: disable=invalid-name
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 app.config['GHOSTSCRIPT_PATH'] = os.environ['GHOSTSCRIPT_PATH']
 
 @app.after_request
