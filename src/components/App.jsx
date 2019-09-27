@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {
   Typography, Radio, Upload, Icon, Input, Col, Row, Button, Card, Alert, Spin,
 } from 'antd';
+import Gauge from 'react-gaugejs';
 
 /**
  * Main page.
@@ -72,7 +73,6 @@ function App() {
         return;
       }
       const resp = JSON.parse(xhr.responseText);
-      console.log(resp['result']);
       setResult(resp['result']);
       setLoading(false);
     };
@@ -98,7 +98,6 @@ function App() {
         return;
       }
       const resp = JSON.parse(xhr.responseText);
-      console.log(resp['result']);
       setResult(resp['result']);
       setLoading(false);
     };
@@ -234,7 +233,11 @@ function App() {
     );
   } else {
     cardContent = (
-      <Typography.Text>Your proof is {result}% rigorous.</Typography.Text>
+      <>
+        <Typography.Text>Your proof is {result}% rigorous.</Typography.Text>
+        <br />
+        <Gauge value={result} />
+      </>
     );
   }
 
