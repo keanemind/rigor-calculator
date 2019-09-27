@@ -15,13 +15,14 @@ if not os.path.isdir('./submissions'):
 
 app = Flask(__name__) # pylint: disable=invalid-name
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['GHOSTSCRIPT_PATH'] = os.environ['GHOSTSCRIPT_PATH']
 
 @app.after_request
 def apply_headers(response):
     """Add headers to every response."""
     origin = request.environ.get('HTTP_ORIGIN', '')
     host = urllib.parse.urlparse(origin).hostname
-    if host in ('localhost', '127.0.0.1'):
+    if host in ('localhost', '127.0.0.1', 'keanemind.github.io'):
         response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS, PUT'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Requested-With'
@@ -50,8 +51,7 @@ def pdf_rigor():
     filename = secure_filename(file.filename)
     filepath = os.path.join('./submissions', filename)
     file.save(filepath)
-    subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-    os.remove(filepath)
+    subprocess.call([app.config['GHOSTSCRIPT_PATH'], '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
 
     pdf = PyPDF2.PdfFileReader(filepath)
     num_pages = pdf.getNumPages()
@@ -59,6 +59,8 @@ def pdf_rigor():
     with open('output.txt', 'r') as text_file:
         text = text_file.read()
         is_probably_scanned = len(text.split()) / num_pages < 20
+
+    os.remove(filepath)
 
     if not is_probably_scanned:
         return jsonify({'result': str_rigor(text)})
@@ -110,8 +112,7 @@ def url_rigor():
 
     if filename.endswith('.pdf'):
         # Determine if PDF is text or image
-        subprocess.call(['gs', '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
-        os.remove(filepath)
+        subprocess.call([app.config['GHOSTSCRIPT_PATH'], '-sDEVICE=txtwrite', '-dFILTERIMAGE', '-o', 'output.txt', filepath])
 
         pdf = PyPDF2.PdfFileReader(filepath)
         num_pages = pdf.getNumPages()
@@ -119,6 +120,8 @@ def url_rigor():
         with open('output.txt', 'r') as text_file:
             text = text_file.read()
             is_probably_scanned = len(text.split()) / num_pages < 20
+
+        os.remove(filepath)
 
         if not is_probably_scanned:
             return jsonify({'result': str_rigor(text)})
