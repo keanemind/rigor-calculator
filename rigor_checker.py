@@ -310,7 +310,7 @@ def calculate_rigor(wordlist: list):
         }
     }
     state = root_state
-    score = 100
+    score = 99
     for word in wordlist:
         word = word.lower()
         state = state['next'].get(word)

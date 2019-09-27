@@ -14,6 +14,7 @@ function App() {
   const [alert, setAlert] = useState(undefined);
   const [result, setResult] = useState(undefined);
   const [textProof, setTextProof] = useState('');
+  const [resultText, setResultText] = useState('');
 
   /**
    * @param {Event} e
@@ -40,6 +41,13 @@ function App() {
       console.log(info);
       setAlert({type: 'error', text: info.file.error.message});
     }
+  }
+
+  /**
+   * @param {*} value
+   */
+  function handleResultTextChange(value) {
+    setResultText(value);
   }
 
   /**
@@ -232,11 +240,50 @@ function App() {
       </>
     );
   } else {
+    let message;
+    if (5000 <= result) {
+      message = 'HOLY MOLYYYYyyyy';
+    } else if (100 <= result && result < 5000) {
+      message = 'A solid argument.';
+    } else if (0 <= result && result < 100) {
+      message = 'Kinda rigorous. Just kidding, haha... unless...?';
+    } else if (-10 <= result && result < 0) {
+      message = 'A weak argument.';
+    } else if (-100 <= result && result < -10) {
+      message = 'Pure hand-waving.';
+    } else if (-5000 <= result && result < -100) {
+      message = 'This proof was left as an exercise for the reader...';
+    } else if (result < -5000) {
+      message = 'I have discovered a truly marvelous proof of this theorem...';
+    }
+    let certification;
+    if (result >= 100) {
+      certification = (
+        <Typography.Paragraph>
+          {[<Icon type='safety' key={0} />, ' Certified Rigorous']}
+        </Typography.Paragraph>
+      );
+    } else if (result <= 0) {
+      certification = (
+        <Typography.Paragraph>
+          {[<Icon type='safety' key={0} />, ' Certified Flimsy']}
+        </Typography.Paragraph>
+      );
+    }
     cardContent = (
       <>
-        <Typography.Text>Your proof is {result}% rigorous.</Typography.Text>
-        <br />
-        <Gauge value={result} />
+        <Typography.Title level={2}>{resultText}% rigor</Typography.Title>
+        {certification}
+        <Gauge
+          minValue={0}
+          maxValue={1000}
+          value={result}
+          animationSpeed={20}
+          textChangeHandler={handleResultTextChange}
+        />
+        <Typography.Paragraph className='fadeIn fadeInDelay'>
+          {message}
+        </Typography.Paragraph>
       </>
     );
   }
