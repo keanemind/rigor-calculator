@@ -325,7 +325,7 @@ function App() {
                 textAlign: 'left',
               }}
             >
-              Meet Laa Laa. She is a teletubby and logician. She loves riding
+              Meet Po. She is a teletubby and logician. She loves riding
               her scooter and reading proofs. If she is not busy riding her
               scooter, she will analyze your proof's rigor.
             </Typography.Paragraph>
