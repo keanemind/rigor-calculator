@@ -154,7 +154,7 @@ def calculate_rigor(wordlist: list):
                                 'oper': lambda cur: cur,
                                 'next': {
                                     'generality': {
-                                        'oper': lambda cur: cur**1.05,
+                                        'oper': lambda cur: (cur**1.05).real,
                                         'next': {}
                                     }
                                 }
@@ -164,7 +164,7 @@ def calculate_rigor(wordlist: list):
                 }
             },
             'wlog': {
-                'oper': lambda cur: cur**1.05,
+                'oper': lambda cur: (cur**1.05).real,
                 'next': {}
             },
             'by': {
