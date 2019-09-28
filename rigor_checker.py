@@ -341,7 +341,7 @@ def pdf_response(filepath):
     pdf = PyPDF2.PdfFileReader(filepath)
     num_pages = pdf.getNumPages()
 
-    with open('output.txt', 'r') as text_file:
+    with open(txt_filename, 'r') as text_file:
         text = text_file.read()
         is_probably_scanned = len(text.split()) / num_pages < 20
 
