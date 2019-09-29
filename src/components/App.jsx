@@ -75,17 +75,41 @@ function App() {
     }
 
     const xhr = new XMLHttpRequest();
+    xhr.open('POST', __APIURL__ + '/url');
     xhr.onload = () => {
-      if (Math.floor(xhr.status / 100) === 5) {
-        setAlert({type: 'error', text: 'Internal server error.'});
-        setLoading(false);
-        return;
+      if (Math.floor(xhr.status / 100) === 2) {
+        const resp = JSON.parse(xhr.responseText);
+        setResult(resp['result']);
+      } else if (Math.floor(xhr.status / 100) === 5) {
+        setAlert({
+          type: 'error',
+          text: 'Po is in a bad mood. (5XX HTTP response code)',
+        });
+      } else {
+        setAlert({
+          type: 'error',
+          text: 'Something went wrong and Po could not be reached. ' +
+                '(1XX/3XX/4XX HTTP response code)',
+        });
       }
-      const resp = JSON.parse(xhr.responseText);
-      setResult(resp['result']);
       setLoading(false);
     };
-    xhr.open('POST', __APIURL__ + '/url');
+    xhr.onerror = () => {
+      setAlert({
+        type: 'error',
+        text: 'Something went wrong and Po could not be reached. ' +
+              '(network error)',
+      });
+      setLoading(false);
+    };
+    xhr.ontimeout = () => {
+      setAlert({
+        type: 'error',
+        text: 'It looks like Po is out riding her scooter. (request timeout)',
+      });
+      setLoading(false);
+    };
+    xhr.timeout = 10000;
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({url: value}));
     setLoading(true);
@@ -100,17 +124,41 @@ function App() {
     }
 
     const xhr = new XMLHttpRequest();
+    xhr.open('POST', __APIURL__ + '/text');
     xhr.onload = () => {
-      if (Math.floor(xhr.status / 100) === 5) {
-        setAlert({type: 'error', text: 'Internal server error.'});
-        setLoading(false);
-        return;
+      if (Math.floor(xhr.status / 100) === 2) {
+        const resp = JSON.parse(xhr.responseText);
+        setResult(resp['result']);
+      } else if (Math.floor(xhr.status / 100) === 5) {
+        setAlert({
+          type: 'error',
+          text: 'Po is in a bad mood. (5XX HTTP response code)',
+        });
+      } else {
+        setAlert({
+          type: 'error',
+          text: 'Something went wrong and Po could not be reached. ' +
+                '(1XX/3XX/4XX HTTP response code)',
+        });
       }
-      const resp = JSON.parse(xhr.responseText);
-      setResult(resp['result']);
       setLoading(false);
     };
-    xhr.open('POST', __APIURL__ + '/text');
+    xhr.onerror = () => {
+      setAlert({
+        type: 'error',
+        text: 'Something went wrong and Po could not be reached. ' +
+              '(network error)',
+      });
+      setLoading(false);
+    };
+    xhr.ontimeout = () => {
+      setAlert({
+        type: 'error',
+        text: 'It looks like Po is out riding her scooter. (request timeout)',
+      });
+      setLoading(false);
+    };
+    xhr.timeout = 10000;
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({text: textProof}));
     setLoading(true);
