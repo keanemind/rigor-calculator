@@ -107,7 +107,7 @@ def generate_rigor_tree(patterns: list):
         {
             'value': '',
             'parent': None,
-            'children': [],
+            'children': {},
             'suffix': None,
             'dict_suffix': None,
             'is_pattern': False,
@@ -125,25 +125,21 @@ def generate_rigor_tree(patterns: list):
             existed = False
 
             # Search for next node
-            for child_idx in cur_node['children']:
+            child_idx = cur_node['children'].get(char)
+            if child_idx:
                 child = graph[child_idx]
-                if child['value'][len(child['value']) - 1] == char:
-                    existed = True
-                    break
-
-            # If next node couldn't be found, create it as child of current node
-            if not existed:
+            else:
                 child = {
                     'value': prefix,
                     'parent': cur_node_idx,
-                    'children': [],
+                    'children': {},
                     'suffix': None,
                     'dict_suffix': None,
                     'is_pattern': False,
                 }
                 child_idx = len(graph)
                 graph.append(child)
-                cur_node['children'].append(child_idx)
+                cur_node['children'][char] = child_idx
 
             if idx == len(pattern) - 1:
                 child['is_pattern'] = True
@@ -161,7 +157,7 @@ def generate_rigor_tree(patterns: list):
         if cur_node['parent'] == 0:
             cur_node['suffix'] = 0
         elif cur_node_idx != 0:
-            cur_node_char = cur_node['value'][len(cur_node['value']) - 1]
+            cur_node_char = cur_node['value'][-1]
 
             # Start from parent
             parent_node = graph[cur_node['parent']]
@@ -174,16 +170,11 @@ def generate_rigor_tree(patterns: list):
 
                 # Traverse suffix link
                 parent_node = graph[parent_node['suffix']]
+                child_idx = parent_node['children'].get(cur_node_char)
+                if child_idx:
+                    cur_node['suffix'] = child_idx
 
-                for child_idx in parent_node['children']:
-                    child = graph[child_idx]
-                    child_char = child['value'][len(child['value']) - 1]
-
-                    if cur_node_char == child_char:
-                        cur_node['suffix'] = child_idx
-                        break
-
-        for child_idx in cur_node['children']:
+        for child_idx in cur_node['children'].values():
             queue.put(child_idx)
 
     # Add dict_suffix links
@@ -205,7 +196,7 @@ def generate_rigor_tree(patterns: list):
                 cur_node['dict_suffix'] = travel_node_idx
                 break
 
-        for child_idx in cur_node['children']:
+        for child_idx in cur_node['children'].values():
             queue.put(child_idx)
 
     return graph
@@ -244,6 +235,24 @@ def calculate_rigor(text: str):
 
     graph = generate_rigor_tree(rules.keys())
     score = 99
+    cur_node = graph[0]
+    for char in text:
+        # Move to the next node
+        next_node_idx = cur_node['children'].get(char)
+        while not next_node_idx and cur_node is not graph[0]:
+            cur_node = graph[cur_node['suffix']] # pylint: disable=invalid-sequence-index
+            next_node_idx = cur_node['children'].get(char)
+        if not next_node_idx:
+            next_node_idx = 0
+        cur_node = graph[next_node_idx]
+
+        # Update score
+        out_node = cur_node
+        while out_node['dict_suffix']:
+            out_node = graph[out_node['dict_suffix']]
+            score = rules[out_node['value']](score)
+        if cur_node['is_pattern']:
+            score = rules[out_node['value']](score)
 
     return score
 
