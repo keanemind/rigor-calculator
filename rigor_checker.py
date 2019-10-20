@@ -213,199 +213,37 @@ def generate_rigor_tree(patterns: list):
 def calculate_rigor(text: str):
     """Calculate the rigor of a list of words."""
     rules = {
-
+        'assume': lambda cur: cur + 0.3,
+        'suppose': lambda cur: cur + 0.3,
+        'hence': lambda cur: cur + 1,
+        'since': lambda cur: cur + 1,
+        'then': lambda cur: cur + 1,
+        'therefore': lambda cur: cur + 1,
+        'thus': lambda cur: cur + 1,
+        'it follows': lambda cur: cur + 1,
+        'without loss of generality': lambda cur: (cur**1.05).real,
+        'wlog': lambda cur: (cur**1.05).real,
+        'by definition': lambda cur: cur + 2,
+        'by hypothesis': lambda cur: cur + 3,
+        'by the inductive hypothesis': lambda cur: cur * 1.5,
+        'by the induction hypothesis': lambda cur: cur * 1.5,
+        'by inductive hypothesis': lambda cur: cur * 1.5,
+        'by induction': lambda cur: cur * 1.5,
+        'by symmetry': lambda cur: cur + 30,
+        'case': lambda cur: cur + 1,
+        'claim': lambda cur: cur + 5,
+        'lemma': lambda cur: cur + 10,
+        'clearly': lambda cur: cur - 11,
+        'obviously': lambda cur: cur - 22,
+        'trivial': lambda cur: cur - 33,
+        'of course': lambda cur: cur - 33,
+        'in particular': lambda cur: cur * 1.1,
+        'qed': lambda cur: cur + 50,
+        'where': lambda cur: cur - 0.5,
     }
 
     graph = generate_rigor_tree(rules.keys())
-
-    return
-
-    root_state = {
-        'oper': lambda cur: cur,
-        'next': {
-            'assume': {
-                'oper': lambda cur: cur + 0.3,
-                'next': {}
-            },
-            'suppose': {
-                'oper': lambda cur: cur + 0.3,
-                'next': {}
-            },
-            'hence': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'since': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'then': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'therefore': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'thus': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'it': {
-                'oper': lambda cur: cur,
-                'next': {
-                    'follows': {
-                        'oper': lambda cur: cur + 1,
-                        'next': {}
-                    }
-                }
-            },
-            'without': {
-                'oper': lambda cur: cur,
-                'next': {
-                    'loss': {
-                        'oper': lambda cur: cur,
-                        'next': {
-                            'of': {
-                                'oper': lambda cur: cur,
-                                'next': {
-                                    'generality': {
-                                        'oper': lambda cur: (cur**1.05).real,
-                                        'next': {}
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            'wlog': {
-                'oper': lambda cur: (cur**1.05).real,
-                'next': {}
-            },
-            'by': {
-                'oper': lambda cur: cur,
-                'next': {
-                    'definition': {
-                        'oper': lambda cur: cur + 2,
-                        'next': {}
-                    },
-                    'hypothesis': {
-                        'oper': lambda cur: cur + 3,
-                        'next': {}
-                    },
-                    'the': {
-                        'oper': lambda cur: cur,
-                        'next': {
-                            'inductive': {
-                                'oper': lambda cur: cur,
-                                'next': {
-                                    'hypothesis': {
-                                        'oper': lambda cur: cur * 1.5,
-                                        'next': {}
-                                    }
-                                }
-                            },
-                            'induction': {
-                                'oper': lambda cur: cur,
-                                'next': {
-                                    'hypothesis': {
-                                        'oper': lambda cur: cur * 1.5,
-                                        'next': {}
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    'inductive': {
-                        'oper': lambda cur: cur,
-                        'next': {
-                            'hypothesis': {
-                                'oper': lambda cur: cur * 1.5,
-                                'next': {}
-                            }
-                        }
-                    },
-                    'induction': {
-                        'oper': lambda cur: cur,
-                        'next': {
-                            'hypothesis': {
-                                'oper': lambda cur: cur * 1.5,
-                                'next': {}
-                            }
-                        }
-                    },
-                    'symmetry': {
-                        'oper': lambda cur: cur + 30,
-                        'next': {}
-                    }
-                }
-            },
-            'case': {
-                'oper': lambda cur: cur + 1,
-                'next': {}
-            },
-            'claim': {
-                'oper': lambda cur: cur + 5,
-                'next': {}
-            },
-            'lemma': {
-                'oper': lambda cur: cur + 10,
-                'next': {}
-            },
-            'clearly': {
-                'oper': lambda cur: cur - 11,
-                'next': {}
-            },
-            'obviously': {
-                'oper': lambda cur: cur - 22,
-                'next': {}
-            },
-            'trivial': {
-                'oper': lambda cur: cur - 33,
-                'next': {}
-            },
-            'of': {
-                'oper': lambda cur: cur,
-                'next': {
-                    'course': {
-                        'oper': lambda cur: cur - 33,
-                        'next': {}
-                    }
-                }
-            },
-            'in': {
-                'oper': lambda cur: cur,
-                'next': {
-                    'particular': {
-                        'oper': lambda cur: cur * 1.1,
-                        'next': {}
-                    }
-                }
-            },
-            'qed': {
-                'oper': lambda cur: cur + 50,
-                'next': {}
-            },
-            'where': {
-                'oper': lambda cur: cur - 0.5,
-                'next': {}
-            }
-        }
-    }
-    state = root_state
     score = 99
-    for word in wordlist:
-        word = word.lower()
-        state = state['next'].get(word)
-
-        if not state:
-            state = root_state['next'].get(word)
-
-        if not state:
-            state = root_state
-
-        score = state['oper'](score)
 
     return score
 
@@ -413,7 +251,7 @@ def str_rigor(text: str):
     """Get the rigor of a string."""
     normalized = ' '.join(text.translate(
         str.maketrans(string.punctuation, len(string.punctuation) * ' ')
-    ).split())
+    ).split()).lower()
     return calculate_rigor(normalized)
 
 def img_to_text(path: str):
