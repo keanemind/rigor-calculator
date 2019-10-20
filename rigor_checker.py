@@ -5,6 +5,7 @@ import subprocess
 import urllib
 import shutil
 import random
+from queue import SimpleQueue
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 import werkzeug.exceptions
@@ -99,11 +100,126 @@ def url_rigor():
     os.remove(filepath)
     return jsonify({'result': str_rigor(text)})
 
-def generate_rigor_tree(rules: dict):
-    """Generate a state tree from rigor rules"""
+def generate_rigor_tree(patterns: list):
+    """Generate an Aho-Corasick graph from a list of patterns."""
+    # Adjacency list
+    graph = [
+        {
+            'value': '',
+            'parent': None,
+            'children': [],
+            'suffix': None,
+            'dict_suffix': None,
+            'is_pattern': False,
+        },
+    ]
 
-def calculate_rigor(wordlist: list):
+    # Create trie
+    for pattern in patterns:
+        # Insert pattern into graph
+        cur_node = graph[0]
+        cur_node_idx = 0
+        prefix = ''
+        for idx, char in enumerate(pattern):
+            prefix += char
+            existed = False
+
+            # Search for next node
+            for child_idx in cur_node['children']:
+                child = graph[child_idx]
+                if child['value'][len(child['value']) - 1] == char:
+                    existed = True
+                    break
+
+            # If next node couldn't be found, create it as child of current node
+            if not existed:
+                child = {
+                    'value': prefix,
+                    'parent': cur_node_idx,
+                    'children': [],
+                    'suffix': None,
+                    'dict_suffix': None,
+                    'is_pattern': False,
+                }
+                child_idx = len(graph)
+                graph.append(child)
+                cur_node['children'].append(child_idx)
+
+            if idx == len(pattern) - 1:
+                child['is_pattern'] = True
+
+            cur_node = child
+            cur_node_idx = child_idx
+
+    # Add suffix links
+    queue = SimpleQueue()
+    queue.put(0)
+    while not queue.empty():
+        cur_node_idx = queue.get(block=False)
+        cur_node = graph[cur_node_idx]
+
+        if cur_node['parent'] == 0:
+            cur_node['suffix'] = 0
+        elif cur_node_idx != 0:
+            cur_node_char = cur_node['value'][len(cur_node['value']) - 1]
+
+            # Start from parent
+            parent_node = graph[cur_node['parent']]
+            while not cur_node['suffix']:
+                # If we got to the root node, set the empty
+                # string as the longest strict suffix.
+                if parent_node is graph[0]:
+                    cur_node['suffix'] = 0
+                    break
+
+                # Traverse suffix link
+                parent_node = graph[parent_node['suffix']]
+
+                for child_idx in parent_node['children']:
+                    child = graph[child_idx]
+                    child_char = child['value'][len(child['value']) - 1]
+
+                    if cur_node_char == child_char:
+                        cur_node['suffix'] = child_idx
+                        break
+
+        for child_idx in cur_node['children']:
+            queue.put(child_idx)
+
+    # Add dict_suffix links
+    # TODO: memoize
+    queue = SimpleQueue()
+    queue.put(0)
+    while not queue.empty():
+        cur_node_idx = queue.get(block=False)
+        cur_node = graph[cur_node_idx]
+
+        travel_node_idx = cur_node_idx
+        travel_node = cur_node
+        while travel_node is not graph[0]:
+            # Traverse suffix link
+            travel_node_idx = travel_node['suffix']
+            travel_node = graph[travel_node_idx]
+
+            if travel_node['is_pattern']:
+                cur_node['dict_suffix'] = travel_node_idx
+                break
+
+        for child_idx in cur_node['children']:
+            queue.put(child_idx)
+
+    return graph
+
+def calculate_rigor(text: str):
     """Calculate the rigor of a list of words."""
+    rules = {
+
+    }
+
+    graph = generate_rigor_tree(rules.keys())
+
+    return
+
     root_state = {
         'oper': lambda cur: cur,
         'next': {
@@ -295,9 +411,10 @@ def calculate_rigor(wordlist: list):
 
 def str_rigor(text: str):
     """Get the rigor of a string."""
-    return calculate_rigor(text.translate(
+    normalized = ' '.join(text.translate(
         str.maketrans(string.punctuation, len(string.punctuation) * ' ')
     ).split())
+    return calculate_rigor(normalized)
 
 def img_to_text(path: str):
     """Convert an image to text."""
@@ -312,24 +429,24 @@ def img_to_text(path: str):
 
     return response.full_text_annotation.text
 
-    for page in response.full_text_annotation.pages:
-        for block in page.blocks:
-            print('\nBlock confidence: {}\n'.format(block.confidence))
+    # for page in response.full_text_annotation.pages:
+    #     for block in page.blocks:
+    #         print('\nBlock confidence: {}\n'.format(block.confidence))
 
-            for paragraph in block.paragraphs:
-                print('Paragraph confidence: {}'.format(
-                    paragraph.confidence))
+    #         for paragraph in block.paragraphs:
+    #             print('Paragraph confidence: {}'.format(
+    #                 paragraph.confidence))
 
-                for word in paragraph.words:
-                    word_text = ''.join([
-                        symbol.text for symbol in word.symbols
-                    ])
-                    print('Word text: {} (confidence: {})'.format(
-                        word_text, word.confidence))
+    #             for word in paragraph.words:
+    #                 word_text = ''.join([
+    #                     symbol.text for symbol in word.symbols
+    #                 ])
+    #                 print('Word text: {} (confidence: {})'.format(
+    #                     word_text, word.confidence))
 
-                    for symbol in word.symbols:
-                        print('\tSymbol: {} (confidence: {})'.format(
-                            symbol.text, symbol.confidence))
+    #                 for symbol in word.symbols:
+    #                     print('\tSymbol: {} (confidence: {})'.format(
+    #                         symbol.text, symbol.confidence))
 
 def pdf_response(filepath):
     """Generate a response from a PDF."""
