@@ -100,7 +100,7 @@ def url_rigor():
     os.remove(filepath)
     return jsonify({'result': str_rigor(text)})
 
-def generate_rigor_tree(patterns: list):
+def generate_search_graph(patterns: list):
     """Generate an Aho-Corasick graph from a list of patterns."""
     # Adjacency list
     graph = [
@@ -122,9 +122,8 @@ def generate_rigor_tree(patterns: list):
         prefix = ''
         for idx, char in enumerate(pattern):
             prefix += char
-            existed = False
 
-            # Search for next node
+            # Search for next node, add it if not found
             child_idx = cur_node['children'].get(char)
             if child_idx:
                 child = graph[child_idx]
@@ -201,40 +200,8 @@ def generate_rigor_tree(patterns: list):
 
     return graph
 
-def calculate_rigor(text: str):
-    """Calculate the rigor of a list of words."""
-    rules = {
-        'assume': lambda cur: cur + 0.3,
-        'suppose': lambda cur: cur + 0.3,
-        'hence': lambda cur: cur + 1,
-        'since': lambda cur: cur + 1,
-        'then': lambda cur: cur + 1,
-        'therefore': lambda cur: cur + 1,
-        'thus': lambda cur: cur + 1,
-        'it follows': lambda cur: cur + 1,
-        'without loss of generality': lambda cur: (cur**1.05).real,
-        'wlog': lambda cur: (cur**1.05).real,
-        'by definition': lambda cur: cur + 2,
-        'by hypothesis': lambda cur: cur + 3,
-        'by the inductive hypothesis': lambda cur: cur * 1.5,
-        'by the induction hypothesis': lambda cur: cur * 1.5,
-        'by inductive hypothesis': lambda cur: cur * 1.5,
-        'by induction': lambda cur: cur * 1.5,
-        'by symmetry': lambda cur: cur + 30,
-        'case': lambda cur: cur + 1,
-        'claim': lambda cur: cur + 5,
-        'lemma': lambda cur: cur + 10,
-        'clearly': lambda cur: cur - 11,
-        'obviously': lambda cur: cur - 22,
-        'trivial': lambda cur: cur - 33,
-        'of course': lambda cur: cur - 33,
-        'in particular': lambda cur: cur * 1.1,
-        'qed': lambda cur: cur + 50,
-        'where': lambda cur: cur - 0.5,
-    }
-
-    graph = generate_rigor_tree(rules.keys())
-    score = 99
+def execute_search_graph(graph, text: str):
+    """Execute an Aho-Corasick search. Yields matches."""
     cur_node = graph[0]
     for char in text:
         # Move to the next node
@@ -246,18 +213,25 @@ def calculate_rigor(text: str):
             next_node_idx = 0
         cur_node = graph[next_node_idx]
 
-        # Update score
+        # Output matches
         out_node = cur_node
         while out_node['dict_suffix']:
             out_node = graph[out_node['dict_suffix']]
-            score = rules[out_node['value']](score)
+            yield out_node['value']
         if cur_node['is_pattern']:
-            score = rules[out_node['value']](score)
+            yield cur_node['value']
+
+def calculate_rigor(text: str):
+    """Calculate the rigor of text."""
+    score = 99
+    matches = execute_search_graph(GRAPH, text)
+    for match in matches:
+        score = RULES[match](score)
 
     return score
 
 def str_rigor(text: str):
-    """Get the rigor of a string."""
+    """Normalize the input text and then calculate its rigor."""
     normalized = ' '.join(text.translate(
         str.maketrans(string.punctuation, len(string.punctuation) * ' ')
     ).split()).lower()
@@ -318,3 +292,35 @@ def pdf_response(filepath):
     return jsonify(
         {'error': 'This looks like a scanned PDF. Please submit a text PDF.'}
     )
+
+RULES = {
+    'assume': lambda cur: cur + 0.3,
+    'suppose': lambda cur: cur + 0.3,
+    'hence': lambda cur: cur + 1,
+    'since': lambda cur: cur + 1,
+    'then': lambda cur: cur + 1,
+    'therefore': lambda cur: cur + 1,
+    'thus': lambda cur: cur + 1,
+    'it follows': lambda cur: cur + 1,
+    'without loss of generality': lambda cur: (cur**1.05).real,
+    'wlog': lambda cur: (cur**1.05).real,
+    'by definition': lambda cur: cur + 2,
+    'by hypothesis': lambda cur: cur + 3,
+    'by the inductive hypothesis': lambda cur: cur * 1.5,
+    'by the induction hypothesis': lambda cur: cur * 1.5,
+    'by inductive hypothesis': lambda cur: cur * 1.5,
+    'by induction': lambda cur: cur * 1.5,
+    'by symmetry': lambda cur: cur + 30,
+    'case': lambda cur: cur + 1,
+    'claim': lambda cur: cur + 5,
+    'lemma': lambda cur: cur + 10,
+    'clearly': lambda cur: cur - 11,
+    'obviously': lambda cur: cur - 22,
+    'trivial': lambda cur: cur - 33,
+    'of course': lambda cur: cur - 33,
+    'in particular': lambda cur: cur * 1.1,
+    'qed': lambda cur: cur + 50,
+    'where': lambda cur: cur - 0.5,
+}
+
+GRAPH = generate_search_graph(RULES.keys())
